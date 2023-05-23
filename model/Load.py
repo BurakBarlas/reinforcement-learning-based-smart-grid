@@ -5,6 +5,7 @@ from Bounds import Bounds
 
 from random import randint, random
 import csv
+import pandas as pd
 
 
 class Load(object):
@@ -36,11 +37,12 @@ class Load(object):
     action_space = [0,1,2]
     no_agent_action = 1
 
-    RANDOMIZE_DEMANDS = True
-    csv_input_file = "household_demand_2.csv"
+    RANDOMIZE_DEMANDS = False
+    csv_input_file = "/Users/burakbarlas/dev/reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
     THRESHOLD = 5
+    xxy = pd.read_csv(csv_input_file,usecols=['Hourly_Total_Load_Consumption'])
 
-
+    print("deneme")
     def __init__(self, demand_ranges = None, batteryParams = None, loadID = None, with_agent=False, look_ahead = 1):
         if loadID is None:
             loadID = Load.num_loads
@@ -48,6 +50,7 @@ class Load(object):
         if demand_ranges is None:                       #Because http://docs.python-guide.org/en/latest/writing/gotchas/
             if self.RANDOMIZE_DEMANDS:
                 demand_ranges = [[DemandRange.default_lower_bound,DemandRange.default_upper_bound]] * 288
+                print(demand_ranges)
             else:
                 demand_ranges = []
                 with open(self.csv_input_file, 'r') as csv_file:
@@ -58,10 +61,14 @@ class Load(object):
                             # ignore initial lines of csv file
                             if line[0].startswith("#") or len(line)<2:
                                 next(reader)
-                                continue
+                                continue 
                         except IndexError:
+                            for value in reader:
+                                for val in value:
+                                    print(val)
                             _demands = [[float(val) for val in value] for value in reader]  # [0] is lower bounds, [1] is upper bounds
                             print(len(_demands), len(_demands[0]), len(_demands[1]))
+                            
                     if _demands is None or len(_demands) != 2 or len(_demands[0]) != 288 or len(_demands[1]) != 288:
                         raise AssertionError("Expected timestep size of 5 mins. Data doesn't match.")
                     for i in range(len(_demands[0])):
@@ -152,50 +159,3 @@ class Load(object):
 
     def get_battery(self):
         return self.battery
-
-    def get_demands(self):
-        return self.demands
-
-    def get_loadID(self):
-        return self.loadID
-
-    def is_with_agent(self):
-        return self.with_agent
-
-    def get_costs(self):
-        return self.get_costs
-
-    def set_demand_ranges(self, demand_ranges):
-        self.demand_ranges = demand_ranges
-
-    def set_battery(self, battery):
-        self.battery = battery
-
-    def set_loadID(self, loadID):
-        self.loadID = loadID
-
-    def set_demands(self, demands):
-        self.demands = demands
-
-    def set_with_agent(self, with_agent):
-        self.with_agent = with_agent
-
-    def set_costs(self, costs):
-        self.costs = costs
-
-    def reset_day(self, battery_reset = False):
-        self.demands = get_last_k(self.demands, self.look_ahead)
-        self.costs = get_last_k(self.costs, self.look_ahead)
-        if battery_reset is True:
-            self.battery.set_current_battery_percentage(100*random())
-        elif isinstance(battery_reset,int) or isinstance(battery_reset, float):
-            self.battery.set_current_battery_percentage(battery_reset)
-
-    def set_look_ahead(self, look_ahead):
-        self.look_ahead = look_ahead
-
-    def get_look_ahead(self):
-        return self.look_ahead
-
-    def sample_action(self):
-        return Load.action_space[randint(0,len(Load.action_space))]

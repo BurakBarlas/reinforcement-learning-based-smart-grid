@@ -1,4 +1,4 @@
-﻿Date/Time,HVAC [kW](Hourly),Electrical appliances [kW](Hourly),Hourly_Total_Load_Consumption,PV Generation Trabzon [kW],PV Generation Antalya [kW]
+﻿Date/Time,HVAC [kW](Hourly),Electrical appliances [kW](Hourly),Hourly Total Load Consumption,PV Generation Trabzon [kW],PV Generation Antalya [kW]
  01/01  01:00:00,0.041273939,0.092942925,0.134216864,0,0
  01/01  02:00:00,0.048924302,0.07618578,0.125110081,0,0
  01/01  03:00:00,0.055788311,0.062326493,0.118114805,0,0
