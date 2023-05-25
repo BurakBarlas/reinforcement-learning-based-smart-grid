@@ -36,52 +36,34 @@ class Load(object):
     default_timestep_size = 5.0
     action_space = [0,1,2]
     no_agent_action = 1
-
     RANDOMIZE_DEMANDS = False
-    csv_input_file = "/Users/burakbarlas/dev/reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
-    THRESHOLD = 5
-    xxy = pd.read_csv(csv_input_file,usecols=['Hourly_Total_Load_Consumption'])
 
-    print("deneme")
+    csv_input_file = "/Users/burakbarlas/dev/reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
+    test_file = "/Users/burakbarlas/dev/reinforcement-learning-based-smart-grid/data/test.csv"
+
+    THRESHOLD = 5
+    
+
     def __init__(self, demand_ranges = None, batteryParams = None, loadID = None, with_agent=False, look_ahead = 1):
         if loadID is None:
             loadID = Load.num_loads
         Load.num_loads += 1
-        if demand_ranges is None:                       #Because http://docs.python-guide.org/en/latest/writing/gotchas/
-            if self.RANDOMIZE_DEMANDS:
-                demand_ranges = [[DemandRange.default_lower_bound,DemandRange.default_upper_bound]] * 288
-                print(demand_ranges)
-            else:
-                demand_ranges = []
-                with open(self.csv_input_file, 'r') as csv_file:
-                    reader = csv.reader(csv_file)
-                    for line in reader:
-                        try:
-                            _demands = None
-                            # ignore initial lines of csv file
-                            if line[0].startswith("#") or len(line)<2:
-                                next(reader)
-                                continue 
-                        except IndexError:
-                            for value in reader:
-                                for val in value:
-                                    print(val)
-                            _demands = [[float(val) for val in value] for value in reader]  # [0] is lower bounds, [1] is upper bounds
-                            print(len(_demands), len(_demands[0]), len(_demands[1]))
-                            
-                    if _demands is None or len(_demands) != 2 or len(_demands[0]) != 288 or len(_demands[1]) != 288:
-                        raise AssertionError("Expected timestep size of 5 mins. Data doesn't match.")
-                    for i in range(len(_demands[0])):
-                        demand_ranges.append([_demands[0][i], _demands[1][i]])
+
+        df = pd.read_csv(self.test_file)
+        demands = df[df.columns[3]].tolist()
+        print(demands)
+
+        print(df.shape)
+        print(demands[1])
 
         if batteryParams is None:
             batteryParams = {}
 
         self.demand_ranges = []
         
-        for demand_range in demand_ranges:
-            self.demand_ranges.append(DemandRange(float(demand_range[0]), float(demand_range[1])))
-
+        for demand_range in demands:
+            self.demand_ranges.append(demand_range)
+        print("self.demand_ranges", self.demand_ranges)
         self.battery = Battery(**batteryParams)
         self.demands = list()
         self.loadID = loadID
@@ -94,12 +76,12 @@ class Load(object):
 
         # for key in params:
         #     setattr(self,key,params[key])
-
     def step(self, timestep, timestep_size= default_timestep_size, action=None):
         """timestep_size is in minutes"""
         # if not self.with_agent:
         #     action = Load.no_agent_action
-
+        print("step")
+        print("action", action)
         if action is None:
             action = Load.no_agent_action
 
@@ -111,7 +93,8 @@ class Load(object):
 
         if action == 0:
             #checks
-            self.demands.append(self.demand_ranges[timestep].generate_demand())
+            self.demands.append(self.demand_ranges[timestep])
+            print("self.demands", self.demands)
 
             battery_percentage_increase = ((self.battery.get_charging_rate()*(timestep_size/60.0))/self.battery.get_battery_capacity()) * 100.0
             new_battery_percentage_increase = min(battery_percentage_increase, 100.0 - self.battery.get_current_battery_percentage())
@@ -124,7 +107,7 @@ class Load(object):
             return [self.demands[-1], (self.battery.get_battery_capacity() * new_battery_percentage_increase/100)*60 / timestep_size, penalty_factor]
         elif action == 1:
             #checks
-            self.demands.append(self.demand_ranges[timestep].generate_demand())
+            self.demands.append(self.demand_ranges[timestep])
             self.demand_bounds.update_bounds(self.demands[-1])
             return [self.demands[-1], 0, penalty_factor]
 
