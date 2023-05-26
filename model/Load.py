@@ -39,8 +39,8 @@ class Load(object):
     RANDOMIZE_DEMANDS = False
 
     csv_input_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
-    test_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
-    # test_file = "../reinforcement-learning-based-smart-grid/data/test.csv"
+    # test_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
+    test_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption_25.csv"
     # test_file = "../reinforcement-learning-based-smart-grid/data/test-2.csv"
 
     THRESHOLD = 5
@@ -109,6 +109,7 @@ class Load(object):
             return [self.demands[-1], (self.battery.get_battery_capacity() * new_battery_percentage_increase/100)*60 / timestep_size, penalty_factor]
         elif action == 1:
             #checks
+            print(len(self.demand_ranges), timestep, "action1")
             self.demands.append(self.demand_ranges[timestep])
             print("self.demands", self.demands)
 

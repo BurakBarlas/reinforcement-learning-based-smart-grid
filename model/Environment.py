@@ -5,7 +5,7 @@ from DemandRange import DemandRange
 
 class Environment():
 
-    def __init__(self, sourceDict = None, loadDict = None, envReady = False, timestep_size = 60, look_ahead = 60):
+    def __init__(self, sourceDict = None, loadDict = None, envReady = False, timestep_size = 60, look_ahead = 1):
 
         if sourceDict is None:
             sourceDict = {}
