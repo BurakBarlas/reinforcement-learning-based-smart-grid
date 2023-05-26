@@ -113,7 +113,7 @@ class Load(object):
 
         elif action == 2:
             #checks
-            self.demands.append(self.demand_ranges[timestep].generate_demand())
+            self.demands.append(self.demand_ranges[timestep])
             battery_percentage_decrease = ((self.demands[-1]*(timestep_size/60.0))/self.battery.get_battery_capacity()) * 100.0
             new_battery_percentage_decrease = min(battery_percentage_decrease, self.battery.get_current_battery_percentage())
             self.battery.set_current_battery_percentage(self.battery.get_current_battery_percentage() - new_battery_percentage_decrease)
