@@ -33,13 +33,15 @@ class Load(object):
     """
     # global num_loads
     num_loads = 0
-    default_timestep_size = 5.0
+    default_timestep_size = 60.0
     action_space = [0,1,2]
     no_agent_action = 1
     RANDOMIZE_DEMANDS = False
 
-    csv_input_file = "/Users/burakbarlas/dev/reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
-    test_file = "/Users/burakbarlas/dev/reinforcement-learning-based-smart-grid/data/test.csv"
+    csv_input_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
+    test_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
+    # test_file = "../reinforcement-learning-based-smart-grid/data/test.csv"
+    # test_file = "../reinforcement-learning-based-smart-grid/data/test-2.csv"
 
     THRESHOLD = 5
     
@@ -108,12 +110,16 @@ class Load(object):
         elif action == 1:
             #checks
             self.demands.append(self.demand_ranges[timestep])
+            print("self.demands", self.demands)
+
             self.demand_bounds.update_bounds(self.demands[-1])
             return [self.demands[-1], 0, penalty_factor]
 
         elif action == 2:
             #checks
             self.demands.append(self.demand_ranges[timestep])
+            print("self.demands", self.demands)
+
             battery_percentage_decrease = ((self.demands[-1]*(timestep_size/60.0))/self.battery.get_battery_capacity()) * 100.0
             new_battery_percentage_decrease = min(battery_percentage_decrease, self.battery.get_current_battery_percentage())
             self.battery.set_current_battery_percentage(self.battery.get_current_battery_percentage() - new_battery_percentage_decrease)
@@ -142,3 +148,50 @@ class Load(object):
 
     def get_battery(self):
         return self.battery
+
+    def get_demands(self):
+        return self.demands
+
+    def get_loadID(self):
+        return self.loadID
+
+    def is_with_agent(self):
+        return self.with_agent
+
+    def get_costs(self):
+        return self.get_costs
+
+    def set_demand_ranges(self, demand_ranges):
+        self.demand_ranges = demand_ranges
+
+    def set_battery(self, battery):
+        self.battery = battery
+
+    def set_loadID(self, loadID):
+        self.loadID = loadID
+
+    def set_demands(self, demands):
+        self.demands = demands
+
+    def set_with_agent(self, with_agent):
+        self.with_agent = with_agent
+
+    def set_costs(self, costs):
+        self.costs = costs
+
+    def reset_day(self, battery_reset = False):
+        self.demands = get_last_k(self.demands, self.look_ahead)
+        self.costs = get_last_k(self.costs, self.look_ahead)
+        if battery_reset is True:
+            self.battery.set_current_battery_percentage(100*random())
+        elif isinstance(battery_reset,int) or isinstance(battery_reset, float):
+            self.battery.set_current_battery_percentage(battery_reset)
+
+    def set_look_ahead(self, look_ahead):
+        self.look_ahead = look_ahead
+
+    def get_look_ahead(self):
+        return self.look_ahead
+
+    def sample_action(self):
+        return Load.action_space[randint(0,len(Load.action_space))]

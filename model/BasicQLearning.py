@@ -125,7 +125,7 @@ def train(startday=0, endday=num_days):
 
 
             max_change_state_action = [load_agent_dict[0].state,current_action]
-        print(day,'Ageof:',load_agent_dict[0].get_explore_rate(day),':',total_change,':',max_change,':',max_change_state_action,':',np.mean(load_agent_dict[0].qtable.max((-1))))
+        # print(day,'Ageof:',load_agent_dict[0].get_explore_rate(day),':',total_change,':',max_change,':',max_change_state_action,':',np.mean(load_agent_dict[0].qtable.max((-1))))
         # if max_change<0.001:
         #     break
         load_agent_dict[0].set_explore_rate(load_agent_dict[0].get_explore_rate(day))
