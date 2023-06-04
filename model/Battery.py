@@ -51,6 +51,13 @@ class Battery(object):
 
     def update_battery_percentage(self, energy_demand):
         self.current_battery_percentage -= ((energy_demand / self.battery_capacity) * 100)
+        if(self.current_battery_percentage < 0):
+            self.current_battery_percentage = 0.0
+
+    def increase_battery_percentage(self, generated_energy):
+        self.current_battery_percentage += ((generated_energy / self.battery_capacity) * 100)
+        if(self.current_battery_percentage > 100.0):
+            self.current_battery_percentage = 100.0
 
     def get_battery_capacity(self):
         return self.battery_capacity

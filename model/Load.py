@@ -1,4 +1,5 @@
 from Battery import Battery
+from SolarPV import SolarPV
 from DemandRange import DemandRange
 from Utils import normalize_timestep, get_last_k
 from Bounds import Bounds
@@ -53,10 +54,6 @@ class Load(object):
 
         df = pd.read_csv(self.test_file)
         demands = df[df.columns[3]].tolist()
-        print(demands)
-
-        print(df.shape)
-        print(demands[1])
 
         if batteryParams is None:
             batteryParams = {}
@@ -65,8 +62,8 @@ class Load(object):
         
         for demand_range in demands:
             self.demand_ranges.append(demand_range)
-        print("self.demand_ranges", self.demand_ranges)
         self.battery = Battery(**batteryParams)
+        self.solarPV = SolarPV()
         self.demands = list()
         self.loadID = loadID
         self.with_agent = with_agent
@@ -82,8 +79,6 @@ class Load(object):
         """timestep_size is in minutes"""
         # if not self.with_agent:
         #     action = Load.no_agent_action
-        print("step")
-        print("action", action)
         if action is None:
             action = Load.no_agent_action
 
@@ -93,10 +88,10 @@ class Load(object):
         timestep = normalize_timestep(timestep, timestep_size, Load.default_timestep_size)
         penalty_factor = 0
 
+        # bataryanin sarj olmasi
         if action == 0:
             #checks
             self.demands.append(self.demand_ranges[timestep])
-            print("self.demands", self.demands)
 
             battery_percentage_increase = ((self.battery.get_charging_rate()*(timestep_size/60.0))/self.battery.get_battery_capacity()) * 100.0
             new_battery_percentage_increase = min(battery_percentage_increase, 100.0 - self.battery.get_current_battery_percentage())
@@ -107,11 +102,10 @@ class Load(object):
             #     penalty_factor = 5 * (self.THRESHOLD + self.battery.current_battery_percentage - 100.0) / self.THRESHOLD
 
             return [self.demands[-1], (self.battery.get_battery_capacity() * new_battery_percentage_increase/100)*60 / timestep_size, penalty_factor]
+        # demand  
         elif action == 1:
             #checks
-            print(len(self.demand_ranges), timestep, "action1")
             self.demands.append(self.demand_ranges[timestep])
-            print("self.demands", self.demands)
 
             self.demand_bounds.update_bounds(self.demands[-1])
             return [self.demands[-1], 0, penalty_factor]
@@ -119,7 +113,6 @@ class Load(object):
         elif action == 2:
             #checks
             self.demands.append(self.demand_ranges[timestep])
-            print("self.demands", self.demands)
 
             battery_percentage_decrease = ((self.demands[-1]*(timestep_size/60.0))/self.battery.get_battery_capacity()) * 100.0
             new_battery_percentage_decrease = min(battery_percentage_decrease, self.battery.get_current_battery_percentage())

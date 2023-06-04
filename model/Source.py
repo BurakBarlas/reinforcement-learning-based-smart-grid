@@ -3,13 +3,12 @@ from DemandRange import DemandRange
 from Utils import get_last_k
 from random import randint
 from Bounds import Bounds
-
 class Source(DemandManager):
 
 
     num_sources = 0
     action_space = [0,1,2,3,4]
-    base_pricing_constant = 10.0
+    base_pricing_constant = 1.0
     action_price_map = {0:1.0, 1:0.7, 2:0.3, 3:1.5, 4: 2.5}
     no_agent_action = 0
 
@@ -19,7 +18,7 @@ class Source(DemandManager):
 
         if sourceID is None:
             sourceID = Source.num_sources
-
+        
         self.sourceID = sourceID
         self.supply_capacity = capacity        # MW
         self.current_price = current_price
@@ -47,8 +46,8 @@ class Source(DemandManager):
         if action is None:
             action = Source.no_agent_action
 
-        # if not self.with_agent:
-        #     action = Source.no_agent_action
+        if not self.with_agent:
+            action = Source.no_agent_action
 
         if action not in Source.action_space:
             raise AssertionError("Not a valid action")
@@ -64,9 +63,14 @@ class Source(DemandManager):
     def calculate_base_price(self):
 
         if self.get_current_demand()< 0.9*self.supply_capacity:
-            return Source.base_pricing_constant * super().get_previous_demand() / self.num_loads
-        else:
-            return 1 * Source.base_pricing_constant * super().get_previous_demand() / self.num_loads
+            if 0 <= len(self.prices) < 6:
+                return 0.493416 
+            elif 6 <= len(self.prices) < 17:
+                return 1.233891
+            elif 17 <= len(self.prices) < 22:
+                return 2.159836
+            else:
+                return 0.493416
 
     def set_look_ahead(self, look_ahead):
         self.look_ahead = look_ahead

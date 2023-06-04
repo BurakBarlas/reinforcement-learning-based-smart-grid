@@ -72,7 +72,7 @@ def train(startday=0, endday=num_days):
         next_action = load_agent_dict[0].take_action()
 
         for step in range(env.get_max_timestep()+1):
-            print(env.get_current_timestep(),step)
+            # print(env.get_current_timestep(),step)
             current_state = next_state
             current_action = next_action
             actions.append(current_action)
@@ -83,6 +83,8 @@ def train(startday=0, endday=num_days):
                           LOAD_VARIANCE_BATTERY_STATE: response[1][0][0][3],
                           LOAD_DEMAND_STATE: response[1][0][1][0]
                           }
+            # print("cost", next_state)
+            print("cost", next_state[LOAD_PRICE_STATE] * next_state[LOAD_DEMAND_STATE]  )
             states.append(current_state)
             if step%20==0:
                 load_agent_dict[0].update_state(next_state, True)
