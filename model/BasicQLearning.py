@@ -8,14 +8,14 @@ from constants import *
 
 
 mode = 'vanilla'
-num_days = 100
+num_days = 1000
 
 agent_params_dict = {
 RANDOMIZE_BATTERY: True,
-LEARNING_RATE : 0.9,
-DISCOUNT_FACTOR : 0.95,
+LEARNING_RATE : 0.3,
+DISCOUNT_FACTOR : 0.90,
 NUM_DUM_LOADS : 999,MODE : mode,
-STATES : ['b101','d15','p10'],
+STATES : ['b101','d15','p101'],
 MOVING_BUCKETS : True
 #CONSTANT_DEMAND = False
 
@@ -32,16 +32,16 @@ def setup():
     env.add_connections({0:[0]})
     env.add_dumb_loads(0,agent_params_dict[NUM_DUM_LOADS])
     env.set_environment_ready()
-    # env.reset(RANDOMIZE_BATTERY)
+    #env.reset(RANDOMIZE_BATTERY)
     load_agent_dict = {0:QTableAgent(env.get_load_action_space(),
                                      {LOAD_BATTERY_STATE:[0,100],LOAD_PRICE_STATE:env.get_price_bounds(0),
-                                      # LOAD_MEAN_BATTERY_STATE:env.get_battery_bounds(0)[0],
-                                      # LOAD_VARIANCE_BATTERY_STATE:env.get_battery_bounds(0)[1],
+                                      #LOAD_MEAN_BATTERY_STATE:env.get_battery_bounds(0)[0],
+                                      #LOAD_VARIANCE_BATTERY_STATE:env.get_battery_bounds(0)[1],
                                       LOAD_DEMAND_STATE:env.get_demand_bounds(0)
                                       },
-                                     {LOAD_BATTERY_STATE:101, LOAD_PRICE_STATE:10,
-                                      # LOAD_MEAN_BATTERY_STATE:10,
-                                      # LOAD_VARIANCE_BATTERY_STATE:10,
+                                     {LOAD_BATTERY_STATE:101, LOAD_PRICE_STATE:101,
+                                      #LOAD_MEAN_BATTERY_STATE:10,
+                                      #LOAD_VARIANCE_BATTERY_STATE:10,
                                       LOAD_DEMAND_STATE:15
                                      },
                                      default_action=1,
@@ -64,23 +64,26 @@ def train(startday=0, endday=num_days):
         response = env.reset(RANDOMIZE_BATTERY)
         next_state = {LOAD_BATTERY_STATE: response[1][0][0][0],
                       LOAD_PRICE_STATE: response[1][0][0][1][-1],
-                      LOAD_MEAN_BATTERY_STATE: response[1][0][0][2],
-                      LOAD_VARIANCE_BATTERY_STATE: response[1][0][0][3],
+                      #LOAD_MEAN_BATTERY_STATE: response[1][0][0][2],
+                      #LOAD_VARIANCE_BATTERY_STATE: response[1][0][0][3],
                       LOAD_DEMAND_STATE: response[1][0][1][0]
                       }
         load_agent_dict[0].update_state(next_state)
         next_action = load_agent_dict[0].take_action()
 
         for step in range(env.get_max_timestep()+1):
-            # print(env.get_current_timestep(),step)
+            #for sourceID in env.source_dict.keys():
+#                print('price',env.source_dict[sourceID].price_bounds.get_bounds())
+            #print(env.get_current_timestep(),step)
+            print(env.source_dict[0].get_raw_total_price())
             current_state = next_state
             current_action = next_action
             actions.append(current_action)
             response = env.step(loadActionDict={0:current_action})
             next_state = {LOAD_BATTERY_STATE: response[1][0][0][0],
                           LOAD_PRICE_STATE: response[1][0][0][1][-1],
-                          LOAD_MEAN_BATTERY_STATE: response[1][0][0][2],
-                          LOAD_VARIANCE_BATTERY_STATE: response[1][0][0][3],
+                          #LOAD_MEAN_BATTERY_STATE: response[1][0][0][2],
+                          #LOAD_VARIANCE_BATTERY_STATE: response[1][0][0][3],
                           LOAD_DEMAND_STATE: response[1][0][1][0]
                           }
             # print("cost", next_state)
@@ -92,7 +95,7 @@ def train(startday=0, endday=num_days):
                 load_agent_dict[0].update_state(next_state, False)
 
 
-            if mode is 'vanilla':
+            if mode == 'vanilla':
                 change = abs(
                     load_agent_dict[0].update_qtable(
                         current_state=current_state, current_action=current_action,
@@ -110,7 +113,7 @@ def train(startday=0, endday=num_days):
                 total_change += change
                 next_action = load_agent_dict[0].take_action()
 
-            elif mode is 'sarsa':
+            elif mode == 'sarsa':
                 next_action = load_agent_dict[0].take_action()
                 max_change = max(abs(
                     load_agent_dict[0].update_qtable(

@@ -21,6 +21,7 @@ class Environment():
         self.max_timestep = int(24*60/timestep_size)-1
         self.look_ahead = look_ahead
         self.test_mode = False
+        self.total_price = 0
 
         self.load_action_dict = {}
         for loadID in self.load_action_dict.keys():
@@ -113,18 +114,19 @@ class Environment():
         self.env_ready = envReady
         self.test_mode = test_mode
         self.reset(True)
+        
         for loadID in self.load_dict.keys():
             self.load_dict[loadID].get_battery().mean_battery_bounds.reset_future_bounds()
             self.load_dict[loadID].get_battery().variance_battery_bounds.reset_future_bounds()
             self.load_dict[loadID].demand_bounds.reset_future_bounds()
-            # print('batterymean',self.load_dict[loadID].get_battery().mean_battery_bounds.get_bounds())
-            # print('batterystd',self.load_dict[loadID].get_battery().variance_battery_bounds.get_bounds())
-            # print('loaddemand',self.load_dict[loadID].demand_bounds.get_bounds())
+            #print('batterymean',self.load_dict[loadID].get_battery().mean_battery_bounds.get_bounds())
+            #print('batterystd',self.load_dict[loadID].get_battery().variance_battery_bounds.get_bounds())
+            #print('loaddemand',self.load_dict[loadID].demand_bounds.get_bounds())
         for sourceID in self.source_dict.keys():
             self.source_dict[sourceID].price_bounds.reset_future_bounds()
             self.source_dict[sourceID].demand_bounds.reset_future_bounds()
-            # print('price',self.source_dict[sourceID].price_bounds.get_bounds())
-            # print('sourcedemand',self.source_dict[sourceID].demand_bounds.get_bounds())
+            #print('price',self.source_dict[sourceID].price_bounds.get_bounds())
+            #print('sourcedemand',self.source_dict[sourceID].demand_bounds.get_bounds())
 
 
     def is_environment_ready(self):
@@ -142,7 +144,9 @@ class Environment():
             print('Environment not ready for simulation yet')
             return -1
         self._update_action_dicts(sourceActionDict,loadActionDict)
+        #print(len(self.source_dict.keys()))
         for sourceID in self.source_dict.keys():
+            
             self._handle_source_step(sourceID)
 
         self.timestep+=1

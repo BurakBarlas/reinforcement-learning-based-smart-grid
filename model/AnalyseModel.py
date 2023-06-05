@@ -22,17 +22,17 @@ MOVING_BUCKETS = 'movingbuckets'
 
 model_params = {
                         RANDOMIZE_BATTERY:True,
-                        LEARNING_RATE: 0.1,
-                        DISCOUNT_FACTOR: 0.95,
+                        LEARNING_RATE: 0.3,
+                        DISCOUNT_FACTOR: 0.90,
                         NUM_DUM_LOADS:999,
-                        DAY:1999,
+                        DAY:49,
                         MODE:'vanilla',
-                        STATES:['b100','p10'],
+                        STATES:['b101','d15','p101'],
                         MOVING_BUCKETS: True,
                 }
 
 agent = {}
-for day in range(1999,39999,2000):
+for day in range(49,999,50):
     # MODEL_PATH = os.getcwd()
     # MODEL_PATH += '/basic_qlearning_models'
     # if model_params[STATES] > 0:
@@ -60,6 +60,15 @@ averages = []
 avg0, avg1, avg2 = [],[],[]
 
 
+arr = agent[49].qtable
+filename = 'qtable.csv'
+arrReshaped = arr.reshape(arr.shape[0], -1)
+np.savetxt(filename, arrReshaped)
+loadedArr = np.loadtxt(filename)
+loadedOriginal = loadedArr.reshape(loadedArr.shape[0], loadedArr.shape[1] // arr.shape[2], arr.shape[2])
+
+print(np.sum(arr[:,:,1]))
+
 for a in agent.keys():
     averages.append(np.mean(agent[a].qtable))
     avg0.append(np.mean(agent[a].qtable[:,:,0]))
@@ -67,10 +76,14 @@ for a in agent.keys():
     avg2.append(np.mean(agent[a].qtable[:,:,2]))
 
 plt.axes().set(title="Learning Curve - 4 States Static Buckets Vanilla Model",xlabel = "Day", ylabel = "Average Q-value")
-plt.plot(range(1999,39999,2000),averages,'k:')
-# plt.figure(1)
-plt.plot(range(1999,39999,2000),avg0,'b')
-# plt.figure(2)
-plt.plot(range(1999,39999,2000),avg1,'r')
-# plt.figure(3)
-plt.plot(range(1999,39999,2000),avg2,'g')
+plt.plot(range(49,999,50),averages,'k:')
+plt.figure(1)
+plt.waitforbuttonpress()
+plt.plot(range(49,999,50),avg0,'b')
+plt.figure(2)
+plt.waitforbuttonpress()
+plt.plot(range(49,999,50),avg1,'r')
+plt.figure(3)
+plt.plot(range(49,999,50),avg2,'g')
+
+plt.waitforbuttonpress()

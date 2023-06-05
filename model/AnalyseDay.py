@@ -13,6 +13,7 @@ LOAD_BATTERY_STATE = 'battery'
 LOAD_PRICE_STATE = 'price'
 LOAD_MEAN_BATTERY_STATE = 'mb'
 LOAD_VARIANCE_BATTERY_STATE = 'vb'
+LOAD_DEMAND_STATE = 'demand'
 
 RANDOMIZE_BATTERY = 'rb'#True
 LEARNING_RATE = 'lr'#0.03
@@ -29,22 +30,12 @@ MOVING_BUCKETS = 'movingbuckets'
 load_agent_params = [
                     {
                         RANDOMIZE_BATTERY:True,
-                        LEARNING_RATE: 0.1,
-                        DISCOUNT_FACTOR: 0.95,
+                        LEARNING_RATE: 0.3,
+                        DISCOUNT_FACTOR: 0.90,
                         NUM_DUM_LOADS:999,
-                        DAY:9999,
+                        DAY:49,
                         MODE:'vanilla',
-                        STATES:['b20', 'p10'],
-                        MOVING_BUCKETS: True
-                     },
-{
-                        RANDOMIZE_BATTERY:True,
-                        LEARNING_RATE: 0.1,
-                        DISCOUNT_FACTOR: 0.95,
-                        NUM_DUM_LOADS:999,
-                        DAY:9999,
-                        MODE:'vanilla',
-                        STATES:['b101', 'p10'],
+                        STATES:['b101','d15', 'p101'],
                         MOVING_BUCKETS: True
                      },
 
@@ -109,6 +100,7 @@ def run_day():
                              LOAD_PRICE_STATE: response[1][k][0][1][-1],
                              LOAD_MEAN_BATTERY_STATE: response[1][k][0][2],
                              LOAD_VARIANCE_BATTERY_STATE: response[1][k][0][3],
+                             LOAD_DEMAND_STATE: response[1][k][1][0],
                              }
     for i in range(NUM_AGENTS + 2):
         demands[i].append(response[1][i][1][0])
@@ -126,11 +118,12 @@ def run_day():
                       LOAD_PRICE_STATE: response[1][k][0][1][-1],
                       LOAD_MEAN_BATTERY_STATE: response[1][k][0][2],
                       LOAD_VARIANCE_BATTERY_STATE: response[1][k][0][3],
+                      LOAD_DEMAND_STATE: response[1][k][1][0],
                       }
         for i in range(NUM_AGENTS + 2):
             demands[i].append(response[1][i][1][1]+response[1][i][1][0])
         prices.append(response[1][0][1][2])
-
+    print(env.source_dict[0].get_raw_total_price())
     return demands, prices
 
 
@@ -153,13 +146,21 @@ for k in demands.keys():
 prices = np.array(prices)
 smooth_prices = smooth(prices)
 
-labels_dict = {0: 'b20p10', 1:'b101p10', 2:'random', 3:'action 1'}
+cost = [0,0,0]
+labels_dict = {0:'b101d10p10'}
+#print('1: ',smooth_demands[1])
+#print('2: ',smooth_demands[2])
+#print('0: ',smooth_demands[0])
+print(demands.keys(),demands.values())
 for i,k in enumerate(demands.keys()):
-    plt.plot(demands[k][1:], colors[i], label=labels_dict[k])
+    cost[k] += sum(prices*demands[k][1:])
+    plt.plot(demands[k][1:], colors[i], label=labels_dict[0])
+    plt.plot(prices*demands[k][1:], colors[i+1], label=labels_dict[0])
     plt.xlabel("Time in minutes")
     plt.ylabel("Performance of agent")
     plt.legend()
-    print(k, colors[i], sum(prices*demands[k][1:]))
+    print(k, colors[i], cost[k])
+    plt.waitforbuttonpress()
 
 # for i,k in enumerate(demands.keys()):
 #     plt.plot(smooth_demands[k][1:], colors[i], label=i+k)

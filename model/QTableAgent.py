@@ -124,7 +124,7 @@ class QTableAgent(object):
 
         if not clip is None:
             increment = max(clip[0], min(clip[1], increment))
-        # print(reward, increment)
+        #print('reward: ', reward, increment)
         self.qtable[tuple(self.state_to_bucket(current_state)) + (current_action,)] += increment
         self.visit_counts[tuple(self.state_to_bucket(current_state)) + (current_action,)] += 1e-4
         # if abs(increment)>abs(reward) and abs(reward)>0.0001:

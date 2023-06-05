@@ -20,6 +20,7 @@ LOAD_LEARNING_RATE = 'lr'
 LOAD_DISCOUNT_FACTOR = 'df'
 LOAD_BATTERY_STATE = 'battery'
 LOAD_PRICE_STATE = 'price'
+LOAD_DEMAND_STATE = 'demand'
 
 
 
@@ -47,11 +48,11 @@ load_agent_params =         {
                                 LOAD_LEARNING_RATE: 0.03,
                                 LOAD_DISCOUNT_FACTOR: 0.9,
                                 LOAD_NUM_LOADS:999,
-                                LOAD_DAY:99999,
+                                LOAD_DAY:99,
                                 LOAD_MODE:'vanilla'
                             }
 LOAD_MODEL_PATH = os.getcwd()
-LOAD_MODEL_PATH += '/basic_qlearning_models'
+LOAD_MODEL_PATH += '/basic_qlearning_models/B101D15P10/moving_buckets'
 if load_agent_params[LOAD_RANDOMIZE_BATTERY]:
     LOAD_MODEL_PATH+='/randomize_battery'
 else:
@@ -83,7 +84,7 @@ def setup():
     source_agent_dict[0].set_learning_rate(SOURCE_LEARNING_RATE)
     return env, source_agent_dict, load_agent
 
-def train(startday=0, endday=200000):
+def train(startday=0, endday=10):
     start=time.time()
     load_actions = {}
     for day in range(startday, endday):
@@ -104,7 +105,7 @@ def train(startday=0, endday=200000):
             if SOURCE_SMART_LOADS:
                 for i in range(SOURCE_NUM_LOADS):
                     load_actions[i] = load_agent.get_action(
-                        {LOAD_BATTERY_STATE: response[1][i][0][0], LOAD_PRICE_STATE: response[1][i][0][1][-1]})
+                        {LOAD_BATTERY_STATE: response[1][i][0][0], LOAD_PRICE_STATE: response[1][i][0][1][-1], LOAD_DEMAND_STATE: response[1][i][1][0]})
 
             response = env.step(sourceActionDict={0:current_action}, loadActionDict=load_actions)
             next_state = {SOURCE_DEMAND_STATE:response[0][0][0][0]}
@@ -149,4 +150,4 @@ def train(startday=0, endday=200000):
 
 env, source_agent_dict, load_agent = setup()
 
-timetaken = train(0,10000)
+timetaken = train(0,100)
