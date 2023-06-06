@@ -94,17 +94,20 @@ class Load(object):
         timestep = normalize_timestep(timestep, timestep_size, Load.default_timestep_size)
         penalty_factor = 0
 
-        # bataryanin sarj olmasi
+        # pvsolar to battery charge
         if action == 0:
             #checks
             self.demands.append(self.demand_ranges[timestep])
-            # print("self.demands", self.demands)
 
-            battery_percentage_increase = ((self.battery.get_charging_rate()*(timestep_size/60.0))/self.battery.get_battery_capacity()) * 100.0
-            new_battery_percentage_increase = min(battery_percentage_increase, 100.0 - self.battery.get_current_battery_percentage())
+            pv_percentage_increase = int((self.solarPV.get_pvGeneration()[timestep]/self.battery.get_battery_capacity())* 100)
+            new_battery_percentage_increase = min(pv_percentage_increase, 100.0 - self.battery.get_current_battery_percentage())
+            demand_usage_percentage = ((self.demands[-1]*(timestep_size/60.0))/self.battery.get_battery_capacity()) * 100.0
+
+
             self.battery.set_current_battery_percentage(self.battery.get_current_battery_percentage()+new_battery_percentage_increase)
             self.demand_bounds.update_bounds(self.demands[-1])
-            penalty_factor = 5*(battery_percentage_increase-new_battery_percentage_increase)/battery_percentage_increase
+            # gride satma actionu bitince penaltyi degistirelim
+            penalty_factor = 5 * (((pv_percentage_increase-new_battery_percentage_increase)/pv_percentage_increase) + ((demand_usage_percentage-new_battery_percentage_increase)/demand_usage_percentage))
             # if self.battery.current_battery_percentage >100.0- self.THRESHOLD:
             #     penalty_factor = 5 * (self.THRESHOLD + self.battery.current_battery_percentage - 100.0) / self.THRESHOLD
 
@@ -115,21 +118,29 @@ class Load(object):
             # print(len(self.demand_ranges), timestep, "action1")
             self.demands.append(self.demand_ranges[timestep])
             # print("self.demands", self.demands)
-
+            
             self.demand_bounds.update_bounds(self.demands[-1])
             return [self.demands[-1], 0, penalty_factor]
-
+            
+        # discharge
         elif action == 2:
+            
             #checks
             self.demands.append(self.demand_ranges[timestep])
             # print("self.demands", self.demands)
-
             battery_percentage_decrease = ((self.demands[-1]*(timestep_size/60.0))/self.battery.get_battery_capacity()) * 100.0
+            # print("battery_percentage_decrease",battery_percentage_decrease)
+            # print("min(" ,min(battery_percentage_decrease, self.battery.get_current_battery_percentage()))
+            # print("self.battery.get_current_battery_percentage" ,self.battery.get_current_battery_percentage())
+
             new_battery_percentage_decrease = min(battery_percentage_decrease, self.battery.get_current_battery_percentage())
+            # print("self.battery.get_current_battery_percentage()",self.battery.get_current_battery_percentage())
+            # print("new_battery_percentage_decrease",new_battery_percentage_decrease)
             self.battery.set_current_battery_percentage(self.battery.get_current_battery_percentage() - new_battery_percentage_decrease)
             # controllable = battery_percentage_decrease* self.battery.get_battery_capacity()*60/ (timestep_size*100)
             uncontrollable = - new_battery_percentage_decrease* self.battery.get_battery_capacity()*60/ (timestep_size*100)
-            # self.demands.append((battery_percentage_decrease - new_battery_percentage_decrease) * self.battery.get_battery_capacity()*60/ (timestep_size*100))
+            # print("uncontrollable",uncontrollable)
+            self.demands.append((battery_percentage_decrease - new_battery_percentage_decrease) * self.battery.get_battery_capacity()*60/ (timestep_size*100))
             self.demand_bounds.update_bounds(self.demands[-1])
             penalty_factor = 5*(battery_percentage_decrease-new_battery_percentage_decrease)/battery_percentage_decrease
             # if self.battery.current_battery_percentage < self.THRESHOLD:
@@ -183,13 +194,16 @@ class Load(object):
     def set_costs(self, costs):
         self.costs = costs
 
+    # random batteriyi kullanma
     def reset_day(self, battery_reset = False):
         self.demands = get_last_k(self.demands, self.look_ahead)
         self.costs = get_last_k(self.costs, self.look_ahead)
         if battery_reset is True:
-            self.battery.set_current_battery_percentage(100*random())
+            None
+            # self.battery.set_current_battery_percentage(100*random())
         elif isinstance(battery_reset,int) or isinstance(battery_reset, float):
-            self.battery.set_current_battery_percentage(battery_reset)
+            None
+            # self.battery.set_current_battery_percentage(battery_reset)
 
     def set_look_ahead(self, look_ahead):
         self.look_ahead = look_ahead

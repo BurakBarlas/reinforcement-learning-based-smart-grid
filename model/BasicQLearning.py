@@ -32,7 +32,7 @@ def setup():
     env.add_connections({0:[0]})
     env.add_dumb_loads(0,agent_params_dict[NUM_DUM_LOADS])
     env.set_environment_ready()
-    #env.reset(RANDOMIZE_BATTERY)
+    env.reset(agent_params_dict[RANDOMIZE_BATTERY])
     load_agent_dict = {0:QTableAgent(env.get_load_action_space(),
                                      {LOAD_BATTERY_STATE:[0,100],LOAD_PRICE_STATE:env.get_price_bounds(0),
                                       #LOAD_MEAN_BATTERY_STATE:env.get_battery_bounds(0)[0],
@@ -61,7 +61,7 @@ def train(startday=0, endday=num_days):
         max_change = 0
         total_change = 0
         max_change_state_action = []
-        response = env.reset(RANDOMIZE_BATTERY)
+        response = env.reset(agent_params_dict[RANDOMIZE_BATTERY])
         next_state = {LOAD_BATTERY_STATE: response[1][0][0][0],
                       LOAD_PRICE_STATE: response[1][0][0][1][-1],
                       #LOAD_MEAN_BATTERY_STATE: response[1][0][0][2],
@@ -75,7 +75,7 @@ def train(startday=0, endday=num_days):
             #for sourceID in env.source_dict.keys():
 #                print('price',env.source_dict[sourceID].price_bounds.get_bounds())
             #print(env.get_current_timestep(),step)
-            print(env.source_dict[0].get_raw_total_price())
+            # print(env.source_dict[0].get_raw_total_price())
             current_state = next_state
             current_action = next_action
             actions.append(current_action)
@@ -86,8 +86,8 @@ def train(startday=0, endday=num_days):
                           #LOAD_VARIANCE_BATTERY_STATE: response[1][0][0][3],
                           LOAD_DEMAND_STATE: response[1][0][1][0]
                           }
-            # print("cost", next_state)
-            print("cost", next_state[LOAD_PRICE_STATE] * next_state[LOAD_DEMAND_STATE]  )
+            # print("cost", next_state[LOAD_DEMAND_STATE])
+            # print("cost", next_state[LOAD_PRICE_STATE] * next_state[LOAD_DEMAND_STATE]  )
             states.append(current_state)
             if step%20==0:
                 load_agent_dict[0].update_state(next_state, True)

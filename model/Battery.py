@@ -15,7 +15,7 @@ class Battery(object):
     """
     HISTORY_FACTOR = .999 # as ln(.9)/ln(.01) ~= 44
 
-    def __init__(self, current_battery_percentage=100.0, battery_capacity=5.0, charging_rate=1.0):
+    def __init__(self, current_battery_percentage=100.0, battery_capacity=3.04, charging_rate=1.0):
         #super(Battery, self).__init__()
         self.current_battery_percentage = current_battery_percentage
         self.battery_capacity = battery_capacity

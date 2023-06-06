@@ -147,7 +147,7 @@ prices = np.array(prices)
 smooth_prices = smooth(prices)
 
 cost = [0,0,0]
-labels_dict = {0:'b101d10p10'}
+labels_dict = {0:'demand', 1: "cost"}
 #print('1: ',smooth_demands[1])
 #print('2: ',smooth_demands[2])
 #print('0: ',smooth_demands[0])
@@ -155,7 +155,7 @@ print(demands.keys(),demands.values())
 for i,k in enumerate(demands.keys()):
     cost[k] += sum(prices*demands[k][1:])
     plt.plot(demands[k][1:], colors[i], label=labels_dict[0])
-    plt.plot(prices*demands[k][1:], colors[i+1], label=labels_dict[0])
+    plt.plot(prices*demands[k][1:], colors[i+1], label=labels_dict[1])
     plt.xlabel("Time in minutes")
     plt.ylabel("Performance of agent")
     plt.legend()
