@@ -107,7 +107,12 @@ class Load(object):
             self.battery.set_current_battery_percentage(self.battery.get_current_battery_percentage()+new_battery_percentage_increase)
             self.demand_bounds.update_bounds(self.demands[-1])
             # gride satma actionu bitince penaltyi degistirelim
-            penalty_factor = 5 * (((pv_percentage_increase-new_battery_percentage_increase)/pv_percentage_increase) + ((demand_usage_percentage-new_battery_percentage_increase)/demand_usage_percentage))
+            try:
+                penalty_factor = 5 * (((pv_percentage_increase-new_battery_percentage_increase)/(pv_percentage_increase)) + ((demand_usage_percentage-new_battery_percentage_increase)/demand_usage_percentage))
+            except:
+                # buraya tekrar bakilabilir
+                penalty_factor = 5 * (1 + ((demand_usage_percentage-new_battery_percentage_increase)/demand_usage_percentage))
+
             # if self.battery.current_battery_percentage >100.0- self.THRESHOLD:
             #     penalty_factor = 5 * (self.THRESHOLD + self.battery.current_battery_percentage - 100.0) / self.THRESHOLD
 
