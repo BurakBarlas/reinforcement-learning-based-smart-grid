@@ -30,12 +30,12 @@ MOVING_BUCKETS = 'movingbuckets'
 load_agent_params = [
                     {
                         RANDOMIZE_BATTERY:True,
-                        LEARNING_RATE: 0.3,
-                        DISCOUNT_FACTOR: 0.90,
+                        LEARNING_RATE: 0.1,
+                        DISCOUNT_FACTOR: 0.95,
                         NUM_DUM_LOADS:999,
-                        DAY:49,
+                        DAY:39959,
                         MODE:'vanilla',
-                        STATES:['b101','d15', 'p101'],
+                        STATES:['b101','d15', 'p10'],
                         MOVING_BUCKETS: True
                      },
 

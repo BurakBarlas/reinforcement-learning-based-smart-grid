@@ -3,11 +3,12 @@ from SolarPV import SolarPV
 from DemandRange import DemandRange
 from Utils import normalize_timestep, get_last_k
 from Bounds import Bounds
+from matplotlib import pyplot as plt
 
 from random import randint, random
 import csv
 import pandas as pd
-
+import numpy as np
 
 class Load(object):
     """
@@ -52,8 +53,20 @@ class Load(object):
             loadID = Load.num_loads
         Load.num_loads += 1
 
+
         df = pd.read_csv(self.csv_input_file)
         demands = df[df.columns[3]].tolist()
+        #print(len(demands))
+        
+
+        demands = self.demand_reshape(demands)
+        #print(len(demands))
+        last_items = demands[-1]
+        #print(last_items)
+        self.demand_graph(demands)
+
+
+        #print(temp_arr[:100])
         #print(demands)
 
         #print(df.shape)
@@ -218,3 +231,39 @@ class Load(object):
 
     def sample_action(self):
         return Load.action_space[randint(0,len(Load.action_space))]
+    
+    def generate_demand(self, upper_bound, lower_bound):
+        return random()*(upper_bound - lower_bound) + lower_bound
+    
+    def demand_graph(self, demands):
+        plt.plot(demands, 'g', linewidth=1.0)
+        plt.show()
+        None
+
+    def demand_reshape(self, demands):
+        temp_arr = np.zeros(12*(len(demands)))
+        temp_diff = 0.0
+        j = 0
+        for i in range(0,len(temp_arr)-2):
+            if i % 12 == 0:
+                try:
+                    #print(temp_diff)
+                    if j > 8700:
+                        #print(i, j)
+                        #print(demands[j])
+                        None
+                        
+                    temp_diff = self.generate_demand(max(demands[j+1],demands[j]), min(demands[j+1],demands[j]))
+                    temp_arr[i] = demands[j]
+                    
+
+                    j += 1
+                    
+                except:
+                    #print('Invalid Index!')
+                    None
+            else:
+                temp_arr[i] = temp_arr[int(i/12)] + self.generate_demand(max(temp_diff,0), min(temp_diff,0))
+
+
+        return temp_arr

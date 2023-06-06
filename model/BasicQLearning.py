@@ -8,14 +8,14 @@ from constants import *
 
 
 mode = 'vanilla'
-num_days = 1000
+num_days = 360*111
 
 agent_params_dict = {
 RANDOMIZE_BATTERY: True,
-LEARNING_RATE : 0.3,
-DISCOUNT_FACTOR : 0.90,
+LEARNING_RATE : 0.1,
+DISCOUNT_FACTOR : 0.95,
 NUM_DUM_LOADS : 999,MODE : mode,
-STATES : ['b101','d15','p101'],
+STATES : ['b101','d15','p10'],
 MOVING_BUCKETS : True
 #CONSTANT_DEMAND = False
 
@@ -39,7 +39,7 @@ def setup():
                                       #LOAD_VARIANCE_BATTERY_STATE:env.get_battery_bounds(0)[1],
                                       LOAD_DEMAND_STATE:env.get_demand_bounds(0)
                                       },
-                                     {LOAD_BATTERY_STATE:101, LOAD_PRICE_STATE:101,
+                                     {LOAD_BATTERY_STATE:101, LOAD_PRICE_STATE:10,
                                       #LOAD_MEAN_BATTERY_STATE:10,
                                       #LOAD_VARIANCE_BATTERY_STATE:10,
                                       LOAD_DEMAND_STATE:15
@@ -55,11 +55,14 @@ def setup():
 
 def train(startday=0, endday=num_days):
     start=time.time()
+    total_cost = 0
     for day in range(startday, endday):
+        
         states = []
         actions = []
         max_change = 0
         total_change = 0
+        day_cost = 0
         max_change_state_action = []
         response = env.reset(agent_params_dict[RANDOMIZE_BATTERY])
         next_state = {LOAD_BATTERY_STATE: response[1][0][0][0],
@@ -86,8 +89,10 @@ def train(startday=0, endday=num_days):
                           #LOAD_VARIANCE_BATTERY_STATE: response[1][0][0][3],
                           LOAD_DEMAND_STATE: response[1][0][1][0]
                           }
-            # print("cost", next_state[LOAD_DEMAND_STATE])
-            # print("cost", next_state[LOAD_PRICE_STATE] * next_state[LOAD_DEMAND_STATE]  )
+            # print("cost", next_state)
+            if(next_action == 0 or next_action == 1):
+                day_cost += next_state[LOAD_PRICE_STATE] * next_state[LOAD_DEMAND_STATE]
+            total_cost += day_cost
             states.append(current_state)
             if step%20==0:
                 load_agent_dict[0].update_state(next_state, True)
@@ -135,7 +140,8 @@ def train(startday=0, endday=num_days):
         #     break
         load_agent_dict[0].set_explore_rate(load_agent_dict[0].get_explore_rate(day))
         # load_agent_dict[0].set_learning_rate(load_agent_dict[0].get_learning_rate(day))
-        if (day+1)%int(num_days/20)==0:
+        if (day+1)%int(num_days/36)==0:
+            print(env.source_dict[0].get_raw_total_price())
             load_agent_dict[0].update_policy()
             # np.save(MODEL_PATH+'/qtable_'+str(day),load_agent_dict[0].qtable)
             # np.save(MODEL_PATH+'/visitcounts_'+str(day),load_agent_dict[0].visit_counts)
@@ -155,10 +161,11 @@ def train(startday=0, endday=num_days):
 
 
     end = time.time()
-    return end-start
+    return end-start, total_cost
 
 env, load_agent_dict = setup()
 
 
 
-timetaken = train(0, num_days)
+timetaken, total_cost = train(0, num_days)
+print(total_cost)
