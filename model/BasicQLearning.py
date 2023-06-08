@@ -145,8 +145,6 @@ def train(startday=0, endday=num_days):
         load_agent_dict[0].set_explore_rate(load_agent_dict[0].get_explore_rate(day))
         # load_agent_dict[0].set_learning_rate(load_agent_dict[0].get_learning_rate(day))
         if (day+1)%int(num_days/12)==0:
-            monthly_balances.append(daily_balance)
-            env.load_dict[0].reset_daily_balance()
             load_agent_dict[0].update_policy()
             0.23557750793144008
             # np.save(MODEL_PATH+'/qtable_'+str(day),load_agent_dict[0].qtable)

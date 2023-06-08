@@ -8,7 +8,7 @@ class SolarPV(object):
 
     csv_input_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
     # test_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
-    test_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption_25.csv"
+    # test_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption_25.csv"
     # test_file = "../reinforcement-learning-based-smart-grid/data/test-2.csv"
 
     THRESHOLD = 5

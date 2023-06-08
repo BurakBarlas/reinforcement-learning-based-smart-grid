@@ -36,9 +36,14 @@ class Load(object):
     # global num_loads
     num_loads = 0
     default_timestep_size = 5.0
-    action_space = [0,1,2]
+    action_space = [0,1,2,3]
     no_agent_action = 1
     RANDOMIZE_DEMANDS = False
+ 
+    actionOne = 0
+    actionTwo = 0
+    actionThree = 0
+    actionFour = 0
 
     csv_input_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
     # test_file = "../reinforcement-learning-based-smart-grid/data/Load_Consumption.csv"
@@ -53,7 +58,6 @@ class Load(object):
             loadID = Load.num_loads
         Load.num_loads += 1
 
-
         df = pd.read_csv(self.csv_input_file)
         demands = df[df.columns[3]].tolist()
         #print(len(demands))
@@ -63,7 +67,7 @@ class Load(object):
         print(len(demands))
         last_items = demands[-1]
         #print(last_items)
-        #self.demand_graph(demands)
+        # self.demand_graph(demands)
 
 
         #print(temp_arr[:100])
@@ -79,7 +83,7 @@ class Load(object):
         
         for demand_range in demands:
             self.demand_ranges.append(demand_range)
-        #print("self.demand_ranges", self.demand_ranges)
+        # print("self.demand_ranges", self.demand_ranges)
         self.battery = Battery(**batteryParams)
         self.solarPV = SolarPV()
         self.demands = list()
@@ -130,22 +134,26 @@ class Load(object):
 
             # if self.battery.current_battery_percentage >100.0- self.THRESHOLD:
             #     penalty_factor = 5 * (self.THRESHOLD + self.battery.current_battery_percentage - 100.0) / self.THRESHOLD
+            self.actionOne += 1
 
-            self.daily_balance -= 1
-
-            return [self.demands[-1], (self.battery.get_battery_capacity() * new_battery_percentage_increase/100)*60 / timestep_size, penalty_factor]
-        # demand  
+            # return [self.demands[-1], (self.battery.get_battery_capacity() * new_battery_percentage_increase/100)*60 / timestep_size, penalty_factor]
+            # Second index should be 0 because charged battery from PV
+            return [self.demands[-1], 0, penalty_factor]
+        # Use grid for demand  
         elif action == 1:
-            self.daily_balance += 1
-            #checks
-            # print(len(self.demand_ranges), timestep, "action1")
             self.demands.append(self.demand_ranges[timestep])
-            # print("self.demands", self.demands)
+            grid_usage = ((self.demands[-1]*(timestep_size/60.0))/self.battery.get_battery_capacity()) * 100.0
             
+            remained_battery_percentage = max(0, grid_usage - self.battery.get_current_battery_percentage())
+
+
             self.demand_bounds.update_bounds(self.demands[-1])
+            penalty_factor = 5 *(100 - remained_battery_percentage)/100
+
+            self.actionTwo += 1
             return [self.demands[-1], 0, penalty_factor]
             
-        # discharge
+        # discharge battery
         elif action == 2:
             #checks
             self.demands.append(self.demand_ranges[timestep])
@@ -161,14 +169,30 @@ class Load(object):
             self.battery.set_current_battery_percentage(self.battery.get_current_battery_percentage() - new_battery_percentage_decrease)
             # controllable = battery_percentage_decrease* self.battery.get_battery_capacity()*60/ (timestep_size*100)
             uncontrollable = - new_battery_percentage_decrease* self.battery.get_battery_capacity()*60/ (timestep_size*100)
-            # print("uncontrollable",uncontrollable)
-            self.demands.append((battery_percentage_decrease - new_battery_percentage_decrease) * self.battery.get_battery_capacity()*60/ (timestep_size*100))
             self.demand_bounds.update_bounds(self.demands[-1])
             penalty_factor = 5*(battery_percentage_decrease-new_battery_percentage_decrease)/battery_percentage_decrease
             # if self.battery.current_battery_percentage < self.THRESHOLD:
             #     penalty_factor = 5 * (self.THRESHOLD - self.battery.current_battery_percentage) / self.THRESHOLD
+            self.actionThree += 1
 
             return [self.demands[-1], uncontrollable,penalty_factor] # *2 is penalty for discharging battery to 0%
+        # sell to grid
+        elif action == 3:
+            self.demands.append(self.demand_ranges[timestep])
+            expected_battery_percentage_decrease = ((self.demands[-1]*(timestep_size/60.0))/self.battery.get_battery_capacity()) * 100.0
+
+            real_battery_percentage_decrease = min(self.battery.get_current_battery_percentage(), expected_battery_percentage_decrease)
+            uncontrollable = - real_battery_percentage_decrease* self.battery.get_battery_capacity()*60/ (timestep_size*100)
+
+            remained_battery_percentage = max(0, self.battery.get_current_battery_percentage() - expected_battery_percentage_decrease)
+             
+            self.battery.set_current_battery_percentage(remained_battery_percentage)
+            self.demand_bounds.update_bounds(self.demands[-1])
+            penalty_factor = 5*(100-remained_battery_percentage)/100
+
+            self.actionFour += 1
+
+            return [self.demands[-1], uncontrollable, penalty_factor]
         else:
             raise AssertionError("I don't know why this is happening")
 
@@ -227,6 +251,7 @@ class Load(object):
 
         self.demands = get_last_k(self.demands, self.look_ahead)
         self.costs = get_last_k(self.costs, self.look_ahead)
+        # print("actionOne" ,self.actionOne, "actionTwo", self.actionTwo, "actionThree", self.actionThree, "actionFour", self.actionFour)
         if battery_reset is True:
             None
             # self.battery.set_current_battery_percentage(100*random())

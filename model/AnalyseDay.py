@@ -33,7 +33,7 @@ load_agent_params = [
                         LEARNING_RATE: 0.1,
                         DISCOUNT_FACTOR: 0.95,
                         NUM_DUM_LOADS:999,
-                        DAY:39959,
+                        DAY:359,
                         MODE:'vanilla',
                         STATES:['b101','d15', 'p10'],
                         MOVING_BUCKETS: True
@@ -92,6 +92,7 @@ def run_day():
     # rewards = [0.0]*(NUM_AGENTS+2)
     prices = []
     demands = dict((k,[]) for k in range(NUM_AGENTS+2))
+    real_demands = dict((k,[]) for k in range(NUM_AGENTS+2))
     actions[NUM_AGENTS+1] = 1                                       # Constant Agent
 
     response = env.reset()
@@ -104,6 +105,8 @@ def run_day():
                              }
     for i in range(NUM_AGENTS + 2):
         demands[i].append(response[1][i][1][0])
+        real_demands[i].append(response[1][i][1][0])
+        
     # prices.append(response[1][0][1][0])
 
     for step in range(env.get_max_timestep() + 1):
@@ -122,9 +125,9 @@ def run_day():
                       }
         for i in range(NUM_AGENTS + 2):
             demands[i].append(response[1][i][1][1]+response[1][i][1][0])
+            real_demands[i].append(response[1][i][1][0])
         prices.append(response[1][0][1][2])
-    print(env.source_dict[0].get_raw_total_price())
-    return demands, prices
+    return demands, real_demands, prices
 
 
 def smooth(a, win = 10):
@@ -136,26 +139,29 @@ def smooth(a, win = 10):
 
 env = setup()
 
-demands, prices = run_day()
+demands, real_demands, prices = run_day()
 colors = ['y','b','g','r','k','r:']
 # window_size = 10
 smooth_demands = {}
 for k in demands.keys():
     demands[k] = np.array(demands[k])
+    real_demands[k] = np.array(real_demands[k])
     smooth_demands[k] = smooth(demands[k])
 prices = np.array(prices)
 smooth_prices = smooth(prices)
 
 cost = [0,0,0]
-labels_dict = {0:'demand', 1: "cost"}
+labels_dict = {0:'grid demand', 1: "cost", 2: 'house demand'}
 #print('1: ',smooth_demands[1])
 #print('2: ',smooth_demands[2])
 #print('0: ',smooth_demands[0])
-print(demands.keys(),demands.values())
+# print(demands.keys(),demands.values())
 for i,k in enumerate(demands.keys()):
+
     cost[k] += sum(prices*demands[k][1:])
     plt.plot(demands[k][1:], colors[i], label=labels_dict[0])
     plt.plot(prices*demands[k][1:], colors[i+1], label=labels_dict[1])
+    plt.plot(real_demands[k][1:], colors[i+2], label=labels_dict[2])
     plt.xlabel("Time in minutes")
     plt.ylabel("Performance of agent")
     plt.legend()
