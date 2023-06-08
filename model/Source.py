@@ -11,7 +11,6 @@ class Source(DemandManager):
     base_pricing_constant = 1.0
     action_price_map = {0:1.0, 1:0.7, 2:0.3, 3:1.5, 4: 2.5}
     no_agent_action = 0
-    raw_total_price = 0
 
     def __init__(self, sourceID = None, capacity = 10000.0, current_price = 0.0, with_agent = False, look_ahead = 1):
 
@@ -54,9 +53,8 @@ class Source(DemandManager):
             raise AssertionError("Not a valid action")
         self.prices.append(self.calculate_base_price() * 1.0 * Source.action_price_map.get(action))
         #print('priced %f times original price with action %d' % (Source.action_price_map[action], action))
-        #print(self.prices)
+        #print(self.prices[-1])
         self.current_price = self.prices[-1]
-        self.raw_total_price += self.current_price
         self.price_bounds.update_bounds(self.current_price)
         self.demand_bounds.update_bounds(self.current_demand)
         return self.get_previous_price() * super().get_current_demand()
@@ -65,11 +63,11 @@ class Source(DemandManager):
     def calculate_base_price(self):
 
         if self.get_current_demand()< 0.9*self.supply_capacity:
-            if 0 <= len(self.prices) < 6:
+            if 0 <= len(self.prices) < 6*12:
                 return 0.493416 
-            elif 6 <= len(self.prices) < 17:
+            elif 6*12 <= len(self.prices) < 17*12:
                 return 1.233891
-            elif 17 <= len(self.prices) < 22:
+            elif 17*12 <= len(self.prices) < 22*12:
                 return 2.159836
             else:
                 return 0.493416
@@ -157,6 +155,3 @@ class Source(DemandManager):
             else:
                 self.add_dumb_load_range(ranges[-1][0], ranges[-1][1])
         self.num_loads += n
-
-    def get_raw_total_price(self):
-        return self.raw_total_price

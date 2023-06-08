@@ -5,7 +5,7 @@ from DemandRange import DemandRange
 
 class Environment():
 
-    def __init__(self, sourceDict = None, loadDict = None, envReady = False, timestep_size = 60, look_ahead = 1):
+    def __init__(self, sourceDict = None, loadDict = None, envReady = False, timestep_size = 5, look_ahead = 1):
 
         if sourceDict is None:
             sourceDict = {}
@@ -151,6 +151,7 @@ class Environment():
 
         self.timestep+=1
         done = False if self.timestep < self.max_timestep else True
+        #print([self.source_feedback_dict.copy(), self.load_feedback_dict.copy(), done])
         return [self.source_feedback_dict.copy(), self.load_feedback_dict.copy(), done]
 
 

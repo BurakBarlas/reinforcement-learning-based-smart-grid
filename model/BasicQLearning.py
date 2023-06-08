@@ -8,7 +8,7 @@ from constants import *
 
 
 mode = 'vanilla'
-num_days = 360*111
+num_days = 360
 
 agent_params_dict = {
 RANDOMIZE_BATTERY: True,
@@ -16,7 +16,8 @@ LEARNING_RATE : 0.1,
 DISCOUNT_FACTOR : 0.95,
 NUM_DUM_LOADS : 999,MODE : mode,
 STATES : ['b101','d15','p10'],
-MOVING_BUCKETS : True
+MOVING_BUCKETS : True,
+BALANCE_AMOUNT : 500
 #CONSTANT_DEMAND = False
 
 #PENALTY_FACTOR = 0.5
@@ -56,10 +57,12 @@ def setup():
 def train(startday=0, endday=num_days):
     start=time.time()
     total_cost = 0
+    monthly_balances = []
     for day in range(startday, endday):
         
         states = []
         actions = []
+        daily_balance = 0
         max_change = 0
         total_change = 0
         day_cost = 0
@@ -76,9 +79,8 @@ def train(startday=0, endday=num_days):
 
         for step in range(env.get_max_timestep()+1):
             #for sourceID in env.source_dict.keys():
-#                print('price',env.source_dict[sourceID].price_bounds.get_bounds())
+                #print('price',env.source_dict[sourceID].price_bounds.get_bounds())
             #print(env.get_current_timestep(),step)
-            # print(env.source_dict[0].get_raw_total_price())
             current_state = next_state
             current_action = next_action
             actions.append(current_action)
@@ -117,6 +119,8 @@ def train(startday=0, endday=num_days):
                 max_change = max(change, max_change) #response should be negative
                 total_change += change
                 next_action = load_agent_dict[0].take_action()
+                #print(daily_balance)
+                daily_balance += env.load_dict[0].get_daily_balance()
 
             elif mode == 'sarsa':
                 next_action = load_agent_dict[0].take_action()
@@ -140,9 +144,11 @@ def train(startday=0, endday=num_days):
         #     break
         load_agent_dict[0].set_explore_rate(load_agent_dict[0].get_explore_rate(day))
         # load_agent_dict[0].set_learning_rate(load_agent_dict[0].get_learning_rate(day))
-        if (day+1)%int(num_days/36)==0:
-            print(env.source_dict[0].get_raw_total_price())
+        if (day+1)%int(num_days/12)==0:
+            monthly_balances.append(daily_balance)
+            env.load_dict[0].reset_daily_balance()
             load_agent_dict[0].update_policy()
+            0.23557750793144008
             # np.save(MODEL_PATH+'/qtable_'+str(day),load_agent_dict[0].qtable)
             # np.save(MODEL_PATH+'/visitcounts_'+str(day),load_agent_dict[0].visit_counts)
             # np.save(MODEL_PATH+'/policy_'+str(day),load_agent_dict[0].policy)
@@ -161,11 +167,11 @@ def train(startday=0, endday=num_days):
 
 
     end = time.time()
-    return end-start, total_cost
+    return end-start, total_cost, monthly_balances
 
 env, load_agent_dict = setup()
 
 
 
-timetaken, total_cost = train(0, num_days)
-print(total_cost)
+timetaken, total_cost, monthly_balances = train(0, num_days)
+#print(monthly_balances)

@@ -35,7 +35,7 @@ class Load(object):
     """
     # global num_loads
     num_loads = 0
-    default_timestep_size = 60.0
+    default_timestep_size = 5.0
     action_space = [0,1,2]
     no_agent_action = 1
     RANDOMIZE_DEMANDS = False
@@ -60,10 +60,10 @@ class Load(object):
         
 
         demands = self.demand_reshape(demands)
-        #print(len(demands))
+        print(len(demands))
         last_items = demands[-1]
         #print(last_items)
-        self.demand_graph(demands)
+        #self.demand_graph(demands)
 
 
         #print(temp_arr[:100])
@@ -88,6 +88,7 @@ class Load(object):
         self.costs = list()
         self.look_ahead = look_ahead
         self.demand_bounds = Bounds()
+        self.daily_balance = 0
         # self.min_demand = 999999.0
         # self.max_demand = 0.0
 
@@ -111,8 +112,9 @@ class Load(object):
         if action == 0:
             #checks
             self.demands.append(self.demand_ranges[timestep])
-
+            print(self.solarPV.get_pvGeneration()[timestep])
             pv_percentage_increase = int((self.solarPV.get_pvGeneration()[timestep]/self.battery.get_battery_capacity())* 100)
+            print(timestep)
             new_battery_percentage_increase = min(pv_percentage_increase, 100.0 - self.battery.get_current_battery_percentage())
             demand_usage_percentage = ((self.demands[-1]*(timestep_size/60.0))/self.battery.get_battery_capacity()) * 100.0
 
@@ -129,9 +131,12 @@ class Load(object):
             # if self.battery.current_battery_percentage >100.0- self.THRESHOLD:
             #     penalty_factor = 5 * (self.THRESHOLD + self.battery.current_battery_percentage - 100.0) / self.THRESHOLD
 
+            self.daily_balance -= 1
+
             return [self.demands[-1], (self.battery.get_battery_capacity() * new_battery_percentage_increase/100)*60 / timestep_size, penalty_factor]
         # demand  
         elif action == 1:
+            self.daily_balance += 1
             #checks
             # print(len(self.demand_ranges), timestep, "action1")
             self.demands.append(self.demand_ranges[timestep])
@@ -142,7 +147,6 @@ class Load(object):
             
         # discharge
         elif action == 2:
-            
             #checks
             self.demands.append(self.demand_ranges[timestep])
             # print("self.demands", self.demands)
@@ -193,6 +197,12 @@ class Load(object):
 
     def get_costs(self):
         return self.costs
+    
+    def reset_daily_balance(self):
+        self.daily_balance = 100
+    
+    def get_daily_balance(self):
+        return self.daily_balance
 
     def set_demand_ranges(self, demand_ranges):
         self.demand_ranges = demand_ranges
@@ -214,6 +224,7 @@ class Load(object):
 
     # random batteriyi kullanma
     def reset_day(self, battery_reset = False):
+
         self.demands = get_last_k(self.demands, self.look_ahead)
         self.costs = get_last_k(self.costs, self.look_ahead)
         if battery_reset is True:

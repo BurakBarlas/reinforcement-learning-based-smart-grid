@@ -127,9 +127,9 @@ class QTableAgent(object):
         #print('reward: ', reward, increment)
         self.qtable[tuple(self.state_to_bucket(current_state)) + (current_action,)] += increment
         self.visit_counts[tuple(self.state_to_bucket(current_state)) + (current_action,)] += 1e-4
-        # if abs(increment)>abs(reward) and abs(reward)>0.0001:
-            # print(increment, reward, best_q, self.qtable[tuple(self.state_to_bucket(current_state)) + (current_action,)])
-            # print(self.state_to_bucket(current_state),current_action,self.state_to_bucket(next_state))
+        if abs(increment)>abs(reward) and abs(reward)>0.0001:
+            print(increment, reward, best_q, self.qtable[tuple(self.state_to_bucket(current_state)) + (current_action,)])
+            print(self.state_to_bucket(current_state),current_action,self.state_to_bucket(next_state))
         return increment
 
     def sample_action(self):
